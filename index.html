@@ -1,0 +1,298 @@
+<<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Engklek – Permainan Tradisional</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#3d474d;--ground:#5f6c73;--chalk:#f6f3ea;--pink:#ff8fb1;--yellow:#ffd84d;--blue:#6fd0ff;--tile:#b5503a;--bad:#ff7a7a;--good:#9be28b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--chalk);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow:hidden}
+#app{height:100dvh;max-width:460px;margin:0 auto;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 10px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:28px;line-height:1;font-weight:800;letter-spacing:.5px;color:var(--yellow)}
+.stats{display:flex;gap:12px;align-items:center;font-weight:700;font-size:15px}
+.stats b{color:var(--yellow)}
+#hp{color:var(--pink);letter-spacing:1px}
+#snd{background:none;border:2px solid var(--chalk);color:var(--chalk);border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer}
+#tbw{height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin:8px 0 4px;overflow:hidden}
+#tb{height:100%;width:0;background:var(--yellow)}
+#msg{min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:16px;line-height:1.2}
+#msg.bad{color:var(--bad)} #msg.good{color:var(--good)}
+#court{flex:1;min-height:0;position:relative;margin:4px auto;width:100%;max-width:340px;padding:10px;border-radius:18px;
+  background:radial-gradient(circle at 50% 40%,#6c7a82,var(--ground));box-shadow:inset 0 0 0 3px rgba(0,0,0,.18)}
+#court.shake{animation:shake .35s}
+#grid{height:100%;display:flex;flex-direction:column;gap:7px}
+.row{flex:1;min-height:0;display:flex;justify-content:center;gap:6px}
+.box{--c:var(--chalk);flex:0 0 calc(50% - 3px);border:3px solid var(--c);border-radius:14px;color:var(--c);background:rgba(255,255,255,.04);
+  display:grid;place-items:center;font-weight:800;font-size:clamp(18px,4.2vh,30px);position:relative}
+.row:not(.single) .box{--c:var(--blue)}
+.box.sky{--c:var(--yellow);flex:0 0 100%;border-radius:50% 50% 14px 14px/90% 90% 14px 14px;font-size:clamp(16px,3.6vh,24px)}
+.box.target{box-shadow:0 0 0 4px rgba(255,216,77,.55),inset 0 0 18px rgba(255,216,77,.35)}
+.box.next{animation:pulse .6s infinite alternate}
+.start{flex:0 0 34px;border-top:3px dashed var(--chalk);display:grid;place-items:center;font-weight:700;font-size:13px;opacity:.85}
+#pl{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+#fw{transition:transform .4s} #fw.flip{transform:rotate(180deg)}
+#feet{display:flex;gap:6px}
+#feet.jump{animation:jump .3s}
+#feet i{display:block;width:18px;height:26px;border-radius:50% 50% 46% 46%;background:var(--pink);border:2px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.28)}
+#gc{position:absolute;left:0;top:0;z-index:2;width:24px;height:18px;border-radius:40% 60% 50% 50%/60% 50% 50% 40%;
+  background:var(--tile);border:2px solid #8a3a2a;box-shadow:0 2px 0 rgba(0,0,0,.3);opacity:0;pointer-events:none;
+  transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .3s}
+#foot{min-height:92px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+#meter{position:relative;height:28px;border-radius:14px;background:rgba(255,255,255,.14);overflow:hidden}
+#zone{position:absolute;top:0;bottom:0;background:var(--good);opacity:.85}
+#mk{position:absolute;top:2px;bottom:2px;width:6px;margin-left:-3px;border-radius:3px;background:#fff}
+button.big{font:800 20px 'Baloo 2','Trebuchet MS',sans-serif;border:0;border-radius:16px;padding:10px 18px;background:var(--yellow);color:#33322c;
+  box-shadow:0 4px 0 #b99a1f;cursor:pointer;width:100%}
+button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #b99a1f}
+#hint{text-align:center;font-size:14px;opacity:.85}
+.hide{display:none!important}
+#ov{position:fixed;inset:0;z-index:10;background:rgba(30,36,40,.88);display:flex;align-items:center;justify-content:center;padding:20px}
+#card{max-width:340px;width:100%;background:var(--ground);border:3px solid var(--chalk);border-radius:20px;padding:20px;text-align:center}
+#card h2{margin:0 0 8px;font-size:30px;color:var(--yellow)}
+#card p{margin:6px 0 14px;font-size:16px;line-height:1.35}
+#ld{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s}
+#ld.done{opacity:0;pointer-events:none}
+#ld h1{font-size:44px}
+#ld p{margin:0;font-weight:700;font-size:16px;opacity:.85}
+.ldc{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ldc b{display:block;width:54px;height:40px;border:3px solid var(--chalk);border-radius:12px}
+.ldc .pr{display:flex;gap:6px}
+.ldc .pr b{border-color:var(--blue);width:26px}
+.ldc .sk{border-color:var(--yellow);border-radius:50% 50% 12px 12px/90% 90% 12px 12px;width:58px}
+.ldc b{animation:lit 1.2s infinite}
+.ldc .pr b:nth-child(2){animation-delay:.15s}
+.ldc>b:nth-of-type(2){animation-delay:.3s}
+@keyframes lit{0%,100%{background:transparent}40%{background:rgba(255,216,77,.35)}}
+#ldbar{width:200px;height:8px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden}
+#ldfill{height:100%;width:0;background:var(--yellow);transition:width .25s}
+@keyframes pulse{to{box-shadow:0 0 0 4px rgba(255,216,77,.7);background:rgba(255,216,77,.16)}}
+@keyframes jump{40%{transform:translateY(-16px) scale(1.15)}}
+@keyframes shake{20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Engklek</h1>
+    <div class="stats">
+      <span>Lv <b id="lv">1</b></span><span id="hp"></span><span>Skor <b id="sc">0</b></span>
+      <button id="snd" aria-label="Suara">🔊</button>
+    </div>
+  </header>
+  <div id="tbw"><div id="tb"></div></div>
+  <div id="msg"></div>
+  <main id="court">
+    <div id="grid"></div>
+    <div id="gc"></div>
+    <div id="pl"><div id="fw"><div id="feet"></div></div></div>
+  </main>
+  <div id="foot">
+    <div id="throwUI">
+      <div id="meter"><div id="zone"></div><div id="mk"></div></div>
+      <button class="big" id="throwBtn" style="margin-top:10px">Lempar gaco!</button>
+    </div>
+    <div id="hint" class="hide">Ketuk kotak yang menyala untuk melompat.</div>
+  </div>
+</div>
+
+<div id="ld">
+  <h1>Engklek</h1>
+  <div class="ldc"><b class="sk"></b><div class="pr"><b></b><b></b></div><b></b></div>
+  <div id="ldbar"><div id="ldfill"></div></div>
+  <p>Menggambar kotak di tanah…</p>
+</div>
+
+<div id="ov" class="hide"><div id="card">
+  <h2 id="ovT">Engklek</h2>
+  <p id="ovP">Lempar <b>gaco</b> ke kotak sesuai level, lalu lompat mengikuti urutan. Jangan injak kotak gaco atau garis.
+  Kotak biru = mendarat dua kaki. Berbalik di <b>Langit</b>, ambil gaco saat pulang. Selesaikan 8 level!</p>
+  <button class="big" id="ovB">Main</button>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const ROWS=[[1],[2],[3,4],[5],[6,7],[8]];            // dari bawah ke atas
+const rowOf=n=>ROWS.findIndex(r=>r.includes(n));
+const name=n=>n===8?'Langit':n;
+const court=$('#court'),grid=$('#grid'),pl=$('#pl'),feet=$('#feet'),fw=$('#fw'),gc=$('#gc');
+const tb=$('#tb'),msgEl=$('#msg'),zone=$('#zone'),mk=$('#mk');
+const rowEl={},boxEl={};
+let S={phase:'idle',lvl:1,lives:3,score:0,pp:[-1,0,2]},sound=true,ac,raf,mt0;
+
+/* ---------- papan ---------- */
+for(let r=5;r>=0;r--){
+  const d=document.createElement('div');d.className='row'+(ROWS[r].length===1?' single':'');rowEl[r]=d;
+  ROWS[r].forEach(n=>{const b=document.createElement('div');b.className='box'+(n===8?' sky':'');b.dataset.n=n;b.textContent=name(n);boxEl[n]=b;d.appendChild(b)});
+  grid.appendChild(d);
+}
+const st=document.createElement('div');st.className='start';st.textContent='garis mulai';rowEl[-1]=st;grid.appendChild(st);
+
+/* ---------- util ---------- */
+const best=()=>{try{return +localStorage.getItem('engklek-best')||0}catch(e){return 0}};
+function beep(f,d=.08,t='sine'){
+  if(!sound)return;
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=.08;
+    o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d);
+  }catch(e){}
+}
+function hud(){
+  $('#lv').textContent=Math.min(S.lvl,8);
+  $('#hp').textContent='♥'.repeat(Math.max(S.lives,0))+'♡'.repeat(3-Math.max(S.lives,0));
+  $('#sc').textContent=S.score;
+}
+function msg(t,c=''){msgEl.textContent=t;msgEl.className=c}
+function ctr(el){const c=court.getBoundingClientRect(),r=el.getBoundingClientRect();return[r.left-c.left+r.width/2,r.top-c.top+r.height/2]}
+function placePl(row,box,nf,still){
+  S.pp=[row,box,nf];
+  feet.innerHTML='<i></i>'.repeat(nf);
+  const[x,y]=ctr(box?boxEl[box]:rowEl[row]);
+  pl.style.transition=still?'none':'';
+  pl.style.transform=`translate(${x-pl.offsetWidth/2}px,${y-pl.offsetHeight/2}px)`;
+}
+function setGc(x,y){gc.style.transform=`translate(${x-12}px,${y-9}px)`}
+function clearHints(){document.querySelectorAll('.next,.target').forEach(e=>e.classList.remove('next','target'))}
+function bar(ms){tb.style.transition='none';tb.style.width=ms?'100%':'0%';void tb.offsetWidth;if(ms){tb.style.transition=`width ${ms}ms linear`;tb.style.width='0%'}}
+function ui(mode){$('#throwUI').classList.toggle('hide',mode!=='throw');$('#hint').classList.toggle('hide',mode==='throw')}
+
+/* ---------- urutan langkah ---------- */
+function buildSteps(g){
+  const row=rowOf(g),single=ROWS[row].length===1,top=row===5,s=[];
+  const hop=r=>s.push({t:'hop',r});
+  for(let r=0;r<=5;r++){if(r===row&&single)continue;hop(r)}
+  if(top){s.push({t:'pick'});for(let r=3;r>=0;r--)hop(r)}
+  else{
+    s.push({t:'turn'});
+    if(single&&row===4)s.push({t:'pick'});
+    for(let r=4;r>=0;r--){
+      if(r===row&&single)continue;
+      hop(r);
+      if((single&&r===row+1)||(!single&&r===row))s.push({t:'pick'});
+    }
+  }
+  return s;
+}
+
+/* ---------- alur level ---------- */
+function startLevel(){
+  S.g=S.lvl;S.steps=buildSteps(S.g);S.phase='throw';
+  fw.classList.remove('flip');gc.style.opacity=0;clearHints();bar(0);
+  placePl(-1,0,2);boxEl[S.g].classList.add('target');
+  msg(`Level ${S.lvl}: lempar gaco ke kotak ${name(S.g)}! Ketuk saat penanda di area hijau.`);
+  ui('throw');meterStart();
+}
+function meterStart(){
+  const w=Math.max(14,32-S.lvl*2.5);S.zone=[10+Math.random()*(80-w),w];
+  zone.style.left=S.zone[0]+'%';zone.style.width=w+'%';
+  const sp=1.1+S.lvl*.18;mt0=performance.now();
+  const loop=t=>{S.mp=(1-Math.cos((t-mt0)/1000*sp*Math.PI))/2*100;mk.style.left=S.mp+'%';raf=requestAnimationFrame(loop)};
+  raf=requestAnimationFrame(loop);
+}
+function doThrow(){
+  if(S.phase!=='throw')return;
+  cancelAnimationFrame(raf);S.phase='busy';
+  const hit=S.mp>=S.zone[0]&&S.mp<=S.zone[0]+S.zone[1];
+  const[sx,sy]=ctr(rowEl[-1]);
+  gc.style.transition='none';setGc(sx,sy);gc.style.opacity=1;void gc.offsetWidth;gc.style.transition='';
+  const[x,y]=ctr(boxEl[S.g]);
+  if(hit){
+    setGc(x,y);beep(520);msg('Gaco mendarat tepat! Sekarang melompat.','good');
+    setTimeout(()=>{S.phase='hop';S.si=0;ui('hop');showStep()},700);
+  }else{
+    setGc(Math.random()<.5?-14:court.clientWidth+14,y);beep(200,.2,'triangle');
+    setTimeout(()=>foul('Gaco keluar kotak!'),700);
+  }
+}
+function showStep(){
+  const s=S.steps[S.si];clearHints();let t;
+  if(s.t==='hop'){
+    const r=ROWS[s.r],gHere=r.includes(S.g);
+    const ok=r.filter(n=>n!==S.g);ok.forEach(n=>boxEl[n].classList.add('next'));
+    t=r.length===2?(gHere?`Satu kaki ke kotak ${ok[0]}`:`Dua kaki di kotak ${r[0]}–${r[1]}`):`Satu kaki ke kotak ${r[0]}`;
+  }else if(s.t==='turn'){boxEl[8].classList.add('next');t='Ketuk Langit untuk berbalik badan'}
+  else{boxEl[S.g].classList.add('next');t=`Ambil gaco di kotak ${name(S.g)}`}
+  msg(t);
+  const limit=Math.max(1800,3600-S.lvl*240);
+  S.t0=performance.now();S.limit=limit;bar(limit);
+  clearTimeout(S.to);S.to=setTimeout(()=>foul('Oleng! Terlalu lama berdiri.'),limit);
+}
+function tap(n){
+  const s=S.steps[S.si];let ok;
+  if(s.t==='hop')ok=rowOf(n)===s.r&&n!==S.g;
+  else if(s.t==='turn')ok=n===8;
+  else ok=n===S.g;
+  if(!ok)return foul(n===S.g&&s.t!=='pick'?'Jangan injak gaco!':'Kena garis! Salah kotak.');
+  clearTimeout(S.to);
+  const bonus=Math.max(0,Math.round(10*(1-(performance.now()-S.t0)/S.limit)));
+  if(s.t==='hop'){
+    const pair=ROWS[s.r].length===2,gHere=ROWS[s.r].includes(S.g),two=pair&&!gHere;
+    placePl(s.r,two?0:n,two?2:1);
+    feet.classList.remove('jump');void feet.offsetWidth;feet.classList.add('jump');
+    S.score+=10+bonus;beep(300+s.r*70);
+  }else if(s.t==='turn'){fw.classList.add('flip');S.score+=10;beep(660)}
+  else{gc.style.opacity=0;S.score+=20;beep(880,.15)}
+  S.si++;hud();
+  S.si>=S.steps.length?finish():showStep();
+}
+function finish(){
+  S.phase='busy';clearTimeout(S.to);clearHints();bar(0);
+  S.score+=50+S.lives*10;hud();beep(990,.25);
+  setTimeout(()=>{placePl(-1,0,2);msg(`Level ${S.lvl} selesai! +${50+S.lives*10} poin`,'good')},350);
+  S.lvl++;
+  setTimeout(()=>S.lvl>8?end(true):startLevel(),1500);
+}
+function foul(m){
+  if(S.phase==='over')return;
+  clearTimeout(S.to);cancelAnimationFrame(raf);S.phase='busy';S.lives--;hud();clearHints();bar(0);
+  beep(140,.35,'sawtooth');msg(m,'bad');
+  court.classList.remove('shake');void court.offsetWidth;court.classList.add('shake');
+  setTimeout(()=>{gc.style.opacity=0;placePl(-1,0,2);S.lives<=0?end(false):startLevel()},1200);
+}
+function end(win){
+  S.phase='over';ui('hop');
+  let b=best();if(S.score>b){b=S.score;try{localStorage.setItem('engklek-best',b)}catch(e){}}
+  $('#ovT').textContent=win?'Sampai Langit! 🎉':'Game over';
+  $('#ovP').innerHTML=`Skor kamu <b>${S.score}</b><br>Skor terbaik <b>${b}</b><br>${win?'Kamu menyelesaikan semua level.':'Nyawa habis di level '+Math.min(S.lvl,8)+'.'}`;
+  $('#ovB').textContent='Main lagi';$('#ov').classList.remove('hide');
+}
+function newGame(){
+  S={phase:'busy',lvl:1,lives:3,score:0,pp:[-1,0,2]};hud();
+  $('#ov').classList.add('hide');startLevel();
+}
+
+/* ---------- input ---------- */
+court.addEventListener('pointerdown',e=>{const b=e.target.closest('.box');if(b&&S.phase==='hop')tap(+b.dataset.n)});
+$('#throwBtn').addEventListener('pointerdown',e=>{e.preventDefault();doThrow()});
+$('#ovB').addEventListener('click',newGame);
+$('#snd').addEventListener('click',e=>{sound=!sound;e.target.textContent=sound?'🔊':'🔇'});
+window.addEventListener('keydown',e=>{if(e.code==='Space'&&S.phase==='throw'){e.preventDefault();doThrow()}});
+function relayout(){placePl(...S.pp,true);if(S.phase==='hop'&&gc.style.opacity==='1'){gc.style.transition='none';const[x,y]=ctr(boxEl[S.g]);setGc(x,y);void gc.offsetWidth;gc.style.transition=''}}
+window.addEventListener('resize',relayout);
+window.addEventListener('load',()=>{hud();placePl(-1,0,2,true)});
+hud();
+
+/* ---------- loading ---------- */
+(function(){
+  const ld=$('#ld'),fill=$('#ldfill'),t0=performance.now(),MIN=1800;
+  let p=0;const iv=setInterval(()=>{p=Math.min(p+Math.random()*12,90);fill.style.width=p+'%'},180);
+  const fonts=(document.fonts&&document.fonts.ready)||Promise.resolve();
+  const loaded=new Promise(r=>window.addEventListener('load',r,{once:true}));
+  const ready=Promise.race([Promise.all([fonts,document.readyState==='complete'?1:loaded]),new Promise(r=>setTimeout(r,4000))]);
+  ready.then(()=>{
+    const wait=Math.max(0,MIN-(performance.now()-t0));
+    setTimeout(()=>{
+      clearInterval(iv);fill.style.width='100%';
+      setTimeout(()=>{ld.classList.add('done');$('#ov').classList.remove('hide');relayout();
+        setTimeout(()=>ld.remove(),600)},350);
+    },wait);
+  });
+})();
+</script>
+</body>
+</html>
